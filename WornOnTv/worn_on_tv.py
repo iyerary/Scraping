@@ -1,10 +1,19 @@
 import json
-import sys
-
 import requests
 from scrapy import Selector
 import pandas as pd
 import random
+import logging
+import sys
+
+# logs config.......
+file_handler = logging.FileHandler(filename='./wornontv.log')
+stdout_handler = logging.StreamHandler(sys.stdout)
+handlers = [file_handler, stdout_handler]
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(message)s', handlers=handlers)
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logger = logging.getLogger("wornontv_logs")
 
 # basic conf...........
 base_url = "https://wornontv.net"
@@ -15,6 +24,7 @@ heads = {
     "Upgrade-Insecure-Requests": "1", "DNT": "1",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Language": "en-US,en;q=0.5",
     "Accept-Encoding": "gzip, deflate"}
+
 # request the url.......
 r = requests.get(url)
 
@@ -37,7 +47,7 @@ if r.status_code == 200:
 
             # total product link for show....
             product_list = []
-            print("On show {}".format(show_name))
+            logger.info("On show {}".format(show_name))
 
             # get max page no............
             total_page = Selector(text=product_listing.text).xpath(
@@ -61,7 +71,7 @@ if r.status_code == 200:
                 value_check = pd.read_csv("F:\PycharmProjects\Ascrape\WornOnTv\Wornontv.csv")
 
                 if product_link in value_check['Product_link'].tolist():
-                    print("Already have product link {} record, so skip this one.".format(product_link))
+                    logger.info("Already have product link {} record, so skip this one.".format(product_link))
                 else:
                     try:
                         product_detail_req = requests.get(product_link)
@@ -89,7 +99,8 @@ if r.status_code == 200:
                                 tags = other_desc["keywords"]
                             except Exception:
                                 try:
-                                    tags = [product_info[product_info.index(od) + 1] for od in product_info if "Tags" in od]
+                                    tags = [product_info[product_info.index(od) + 1] for od in product_info if
+                                            "Tags" in od]
                                 except Exception:
                                     tags = ""
 
@@ -140,8 +151,9 @@ if r.status_code == 200:
                                     buy_encode = Selector(text=link_req.text).xpath('//link[@rel="canonical"]').xpath(
                                         '@href').extract()
                                 elif es_store[0].lower() == "farfetch":
-                                    buy_encode = [Selector(text=link_req.text).xpath('//meta[@http-equiv="refresh"]').xpath(
-                                        '@content').extract()[0].split(":")[-1]]
+                                    buy_encode = [
+                                        Selector(text=link_req.text).xpath('//meta[@http-equiv="refresh"]').xpath(
+                                            '@content').extract()[0].split(":")[-1]]
                                 elif es_store[0].lower() == "saks fifth avenue":
                                     try:
                                         buy_encode = \
@@ -152,8 +164,9 @@ if r.status_code == 200:
                                     except Exception:
                                         pass
                                 if buy_encode:
-                                    buy_link = [buy_encode[0].split("murl=")[-1].split("&")[0].replace("%2F", "/").replace(
-                                        "%3F", "?").replace("%3D", "=").replace(" %26", "&").replace("%3A", ":")]
+                                    buy_link = [
+                                        buy_encode[0].split("murl=")[-1].split("&")[0].replace("%2F", "/").replace(
+                                            "%3F", "?").replace("%3D", "=").replace(" %26", "&").replace("%3A", ":")]
                                 else:
                                     buy_link = [""]
                                 return es_image, es_store, es_price, buy_link
@@ -198,13 +211,15 @@ if r.status_code == 200:
                                                                'In House Price',
                                                                'Why we Like it', 'Who will this suit', 'Region', 'Year',
                                                                'Video',
-                                                               'Exact Image', 'Exact Store', 'Exact Price', 'Exact BuyLink',
+                                                               'Exact Image', 'Exact Store', 'Exact Price',
+                                                               'Exact BuyLink',
                                                                'Similar Image', 'Similar Store', 'Similar Price',
                                                                'Similar BuyLink'])
                                 new_df.to_csv(csv_path, mode='a', header=False, index=False)
 
-                                print("Completed link no. {} from total of {}".format(product_list.index(product_link) + 1,
-                                                                                      len(product_list)))
+                                logger.info("Completed link no. {} from total of {}".format(
+                                    product_list.index(product_link) + 1,
+                                    len(product_list)))
 
 
                             outfit_details = \
@@ -231,14 +246,13 @@ if r.status_code == 200:
                             else:
                                 csv_data_save("", "", "")
                     except Exception as e:
-                        exception_type, exception_object, exception_traceback = sys.exc_info()
-                        line_number = exception_traceback.tb_lineno
-                        print(line_number)
+                        with open("./exception_link.txt", 'a+') as fp:
+                            fp.write(product_link+"\n")
+                        logger.error("Have some issues with the link {}".format(product_link))
                         pass
-
-            print("Get all detail of show {}".format(show_name))
+            logger.info("Get all detail of show {}".format(show_name))
 
         else:
-            print("Have some issues with the page.")
+            logger.info("Have some issues with the page.")
 else:
-    print("Have some issues with the site.")
+    logger.info("Have some issues with the site.")
