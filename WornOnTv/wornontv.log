@@ -2974,3 +2974,25 @@
 2022-02-23 22:19:36,336 - Completed link no. 13 from total of 183
 2022-02-23 22:19:42,386 - Completed link no. 14 from total of 183
 2022-02-23 22:19:52,402 - Have some issues with the link https://wornontv.net/188094/
+2022-02-24 20:08:47,086 - Total shows is 388
+2022-02-24 20:10:55,628 - Total shows is 388
+2022-02-24 20:11:18,808 - Total shows is 388
+2022-02-24 20:13:16,891 - Total shows is 388
+2022-02-24 20:20:18,753 - Total shows is 388
+2022-02-24 20:21:06,673 - Total shows is 388
+2022-02-24 20:21:27,396 - Starting new HTTPS connection (1): wornontv.net:443
+2022-02-24 20:21:28,349 - https://wornontv.net:443 "GET /shows/ HTTP/1.1" 200 None
+2022-02-24 20:21:28,688 - Total shows is 388
+2022-02-24 20:21:32,234 - Starting new HTTPS connection (1): wornontv.netyoure-the-worst:443
+2022-02-24 20:21:51,121 - Total shows is 388
+2022-02-24 20:23:01,361 - Total shows is 388
+2022-02-24 20:23:24,570 - Total shows is 388
+2022-02-24 20:23:27,394 - On show 12-monkeys
+2022-02-24 20:23:27,753 - Already have product link https://wornontv.net/44092/ record, so skip this one.
+2022-02-24 20:23:27,763 - Already have product link https://wornontv.net/45028/ record, so skip this one.
+2022-02-24 20:23:27,768 - Already have product link https://wornontv.net/44637/ record, so skip this one.
+2022-02-24 20:23:27,773 - Already have product link https://wornontv.net/45030/ record, so skip this one.
+2022-02-24 20:23:27,778 - Already have product link https://wornontv.net/44099/ record, so skip this one.
+2022-02-24 20:23:27,783 - Already have product link https://wornontv.net/44095/ record, so skip this one.
+2022-02-24 20:23:27,784 - Get all detail of show 12-monkeys
+2022-02-24 20:23:28,897 - On show 13-reasons-why
