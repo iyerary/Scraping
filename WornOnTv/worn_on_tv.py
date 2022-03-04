@@ -224,7 +224,7 @@ if r.status_code == 200:
                                                                    'Product Name',
                                                                    'Product Brand', 'Outfit Name', 'Outfit Description',
                                                                    'Outfit Image', 'Movie/Show',
-                                                                   'Series name',
+                                                                   'Series Description',
                                                                    'Series No', 'Episode', 'Celebrity Name',
                                                                    'Character Name',
                                                                    'Celebrity Image', 'Celebrity Type', 'Image1',
