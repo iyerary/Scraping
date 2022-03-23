@@ -33,6 +33,8 @@
 
 import argparse
 import json
+import os
+
 import requests
 from scrapy import Selector
 import pandas as pd
@@ -99,7 +101,7 @@ if r.status_code == 200:
                     '//div[@class="navigation"]//ul//li').extract()
 
                 select_page = Selector(text=product_listing.text).xpath(
-                    '(//div[@class="navigation"]//ul//li)[{}]//text()'.format(len(total_page)-1)).extract()
+                    '(//div[@class="navigation"]//ul//li)[{}]//text()'.format(len(total_page) - 1)).extract()
 
                 if select_page:
                     select_page = [int(select_page[0])]
@@ -128,187 +130,82 @@ if r.status_code == 200:
                         try:
                             product_detail_req = requests.get(product_link)
                             if product_detail_req.status_code == 200:
+
+                                # --------------------------------------------------------------------------------------
                                 product_info = Selector(text=product_detail_req.text).xpath(
-                                    '//div[@id="single-inner"]//text()').extract()
+                                    '(//div[@class="col-md-6"])[2]//text()').extract()
                                 product_info = [x.replace('\t', '').replace('\n', '') for x in product_info]
                                 product_info = [" ".join(x.split()) for x in product_info]
 
-                                # detail data...........
-                                product_info = [xs for xs in product_info if xs]
-                                celeb_episode_detail = json.loads([od for od in product_info if "@context" in od][0])
-                                other_desc = json.loads([od for od in product_info if "@context" in od][-1])
-                                json_detail = [od for od in product_info if "@context" in od]
+                                # --------------------------------------------------------------------------------------
+                                buy_link_info = Selector(text=product_detail_req.text).xpath(
+                                    '(//div[@class="col-md-6"])[2]//li/p//a').xpath('@href').extract()
 
-                                # fields..........
+                                # --------------------------------------------------------------------------------------
+                                title_info = Selector(text=product_detail_req.text).xpath(
+                                    '//span[@itemprop="name"]//text()').extract()
+
+                                # --------------------------------------------------------------------------------------
+                                img_info = Selector(text=product_detail_req.text).xpath(
+                                    '(//div[@class="col-md-6"])[1]//img').xpath('@src').extract()
+
+                                # --------------------------------------------------------------------------------------
+                                celeb_image = title = buy_link = ''
+
+                                # --------------------------------------------------------------------------------------
                                 ids = int(str(random.randint(1, 10000000000000000000000000))[:5])
-                                title = product_info[0]
-                                series_name = celeb_episode_detail["name"]
-                                season_number = celeb_episode_detail["partOfSeason"]["seasonNumber"]
-                                character = celeb_episode_detail["character"]["name"]
-                                actor = celeb_episode_detail["actor"]["name"]
-                                episode = celeb_episode_detail["episodeNumber"]
+                                actor = [product_info[product_info.index(ac) + 1] for ac in product_info if "Actor" in ac]
+                                show_series_name = [product_info[product_info.index(ac) + 1] for ac in product_info if "Show" in ac]
+                                episode = [product_info[product_info.index(ac) + 1] for ac in product_info if "Episode" in ac]
+                                brand_product = [product_info[product_info.index(ac) + 1] for ac in product_info if "Brand Product" in ac]
                                 try:
-                                    tags = other_desc["keywords"]
+                                    buy_price = [product_info[product_info.index(ac) + 1:product_info.index("Description:")] for ac in product_info if "Buy" in ac]
+                                    if buy_price:
+                                        buy_price = buy_price[0][1]
                                 except Exception:
-                                    try:
-                                        tags = [product_info[product_info.index(od) + 1] for od in product_info if
-                                                "Tags" in od]
-                                    except Exception:
-                                        tags = ""
+                                    buy_price = ''
+                                get_it_second_hand = [product_info[product_info.index(ac) + 1] for ac in product_info if "Get it second hand" in ac]
+                                sort_description = [product_info[product_info.index(ac) + 1] for ac in product_info if "Description" in ac]
 
-                                try:
-                                    description = other_desc["articleBody"].split("For shoppable links")[0]
-                                except Exception:
-                                    description = ""
-                                images = [im["url"] for im in other_desc["image"]]
-                                celeb_image = images[0]
+                                if buy_link_info:
+                                    buy_link = buy_link_info[0]
 
-                                exact_similar = Selector(text=product_detail_req.text).xpath(
-                                    '//div[@class="products-wrap"]//span[@class="product-store"]//text()').extract()
-                                exact_final_xpath = similar_final_xpath = None
-                                exact_image = exact_store = exact_price = similar_image = similar_store = similar_price = similar_buy_link = exact_buy_link = [
-                                    '']
-                                for es in exact_similar:
-                                    exact_paths = '//div[@class="product-item  product-{}"]//img[@class="exact-match "]'.format(
-                                        es)
-                                    similar_paths = '//div[@class="product-item  product-{}"]//img[@class="similar-match "]'.format(
-                                        es)
-                                    tester1 = Selector(text=product_detail_req.text).xpath(exact_paths).extract()
-                                    if tester1:
-                                        exact_final_xpath = '//div[@class="product-item  product-{}"]'.format(es)
-                                    tester2 = Selector(text=product_detail_req.text).xpath(similar_paths).extract()
-                                    if tester2:
-                                        similar_final_xpath = '//div[@class="product-item  product-{}"]'.format(es)
+                                if title_info:
+                                    title = title_info[-1]
 
+                                if img_info:
+                                    celeb_image = img_info[0]
 
-                                def exact_sim_buy_link(es_xpath):
+                                fields = [[ids, "", product_link]]
 
-                                    es_image = Selector(text=product_detail_req.text).xpath(es_xpath
-                                                                                            + '//span[@class="product-item-image "]//img').xpath(
-                                        "@src").extract()
-                                    if es_image:
-                                        es_image = [base_url + es_image[0]]
-                                    es_store = Selector(text=product_detail_req.text).xpath(
-                                        es_xpath + '//span[@class="product-store"]//text()').extract()
-                                    es_price = Selector(text=product_detail_req.text).xpath(
-                                        es_xpath + '//span[@class="product-price"]//text()').extract()
-                                    es_buy_link_of_worn_on = Selector(text=product_detail_req.text).xpath(
-                                        es_xpath + '//a').xpath("@href").extract()
+                                new_df = pd.DataFrame(fields,
+                                                      columns=['Id', 'Short Description', 'Product_link',
+                                                               'Description',
+                                                               'Product Name',
+                                                               'Product Brand', 'Outfit Name', 'Outfit Description',
+                                                               'Outfit Image', 'Movie/Show',
+                                                               'Series Description',
+                                                               'Series No', 'Episode', 'Celebrity Name',
+                                                               'Character Name',
+                                                               'Celebrity Image', 'Celebrity Type', 'Image1',
+                                                               'Image2',
+                                                               'Media',
+                                                               'Buy',
+                                                               'Extra_description', 'Source', 'Key works',
+                                                               'In House',
+                                                               'In House Price',
+                                                               'Why we Like it', 'Who will this suit', 'Region',
+                                                               'Year',
+                                                               'Video',
+                                                               'Exact Image', 'Exact Store', 'Exact Price',
+                                                               'Exact BuyLink',
+                                                               'Similar Image', 'Similar Store', 'Similar Price',
+                                                               'Similar BuyLink'])
+                                new_df.to_csv(csv_path, mode='a', header=False, index=False)
 
-                                    link_req = requests.get(es_buy_link_of_worn_on[0], headers=heads)
-                                    xsdc = link_req.text
-                                    buy_encode = Selector(text=link_req.text).xpath(
-                                        '//meta[@http-equiv="refresh"]').xpath(
-                                        '@content').extract()
-                                    if es_store[0].lower() == "amazon":
-                                        buy_encode = Selector(text=link_req.text).xpath(
-                                            '//link[@rel="canonical"]').xpath(
-                                            '@href').extract()
-                                    elif es_store[0].lower() == "farfetch":
-                                        buy_encode = [
-                                            Selector(text=link_req.text).xpath('//meta[@http-equiv="refresh"]').xpath(
-                                                '@content').extract()[0].split(":")[-1]]
-                                    elif es_store[0].lower() == "saks fifth avenue":
-                                        try:
-                                            buy_encode = \
-                                                Selector(text=link_req.text).xpath('//wainclude').xpath(
-                                                    '@url').extract()[
-                                                    0].split(
-                                                    "pid=")[-1]
-                                            buy_encode = [
-                                                "https://www.saksfifthavenue.com/product/show?pid=" + buy_encode]
-                                        except Exception:
-                                            pass
-                                    if buy_encode:
-                                        buy_link = [
-                                            buy_encode[0].split("murl=")[-1].split("&")[0].replace("%2F", "/").replace(
-                                                "%3F", "?").replace("%3D", "=").replace(" %26", "&").replace("%3A",
-                                                                                                             ":")]
-                                    else:
-                                        buy_link = [""]
-                                    return es_image, es_store, es_price, buy_link
-
-
-                                if exact_final_xpath:
-                                    exact_image, exact_store, exact_price, exact_buy_link = exact_sim_buy_link(
-                                        exact_final_xpath)
-                                if similar_final_xpath:
-                                    similar_image, similar_store, similar_price, similar_buy_link = exact_sim_buy_link(
-                                        similar_final_xpath)
-
-                                exact = {"image": exact_image[0], "store": exact_store[0], "price": exact_price[0],
-                                         "buy_link": exact_buy_link[0]}
-                                similar = {"image": similar_image[0], "store": similar_store[0],
-                                           "price": similar_price[0], "buy_link": similar_buy_link[0]}
-
-
-                                def csv_data_save(on, od, oi):
-                                    fields = [
-                                        [ids, "", product_link, description, title, "", on, od, oi, show_name,
-                                         series_name,
-                                         season_number, episode, actor, character, celeb_image, "Mainstream", ""
-                                            , "", "", "", "", "WornOnTv", tags, "", "", "", "", "", "", "",
-                                         exact_image[0],
-                                         exact_store[0],
-                                         exact_price[0], exact_buy_link[0], similar_image[0], similar_store[0],
-                                         similar_price[0], similar_buy_link[0]
-                                         ]]
-
-                                    new_df = pd.DataFrame(fields,
-                                                          columns=['Id', 'Short Description', 'Product_link',
-                                                                   'Description',
-                                                                   'Product Name',
-                                                                   'Product Brand', 'Outfit Name', 'Outfit Description',
-                                                                   'Outfit Image', 'Movie/Show',
-                                                                   'Series Description',
-                                                                   'Series No', 'Episode', 'Celebrity Name',
-                                                                   'Character Name',
-                                                                   'Celebrity Image', 'Celebrity Type', 'Image1',
-                                                                   'Image2',
-                                                                   'Media',
-                                                                   'Buy',
-                                                                   'Extra_description', 'Source', 'Key works',
-                                                                   'In House',
-                                                                   'In House Price',
-                                                                   'Why we Like it', 'Who will this suit', 'Region',
-                                                                   'Year',
-                                                                   'Video',
-                                                                   'Exact Image', 'Exact Store', 'Exact Price',
-                                                                   'Exact BuyLink',
-                                                                   'Similar Image', 'Similar Store', 'Similar Price',
-                                                                   'Similar BuyLink'])
-                                    new_df.to_csv(csv_path, mode='a', header=False, index=False)
-
-                                    logger.info("Completed link no. {} from total of {}".format(
-                                        product_list.index(product_link) + 1,
-                                        len(product_list)))
-
-
-                                outfit_details = \
-                                    [product_info[product_info.index("Outfit Details") + 1:product_info.index(od)] for
-                                     od in
-                                     product_info if "@context" in od][0]
-                                ods = [ij for ij in outfit_details if ":" in ij]
-                                if ods:
-                                    for kj in ods:
-                                        try:
-                                            end_range = outfit_details.index(ods[ods.index(kj) + 1])
-                                            outfit_desc = " ".join(
-                                                outfit_details[outfit_details.index(kj) + 1:end_range])
-                                        except Exception:
-                                            outfit_desc = " ".join(outfit_details[outfit_details.index(kj) + 1:])
-                                        try:
-                                            image_outfit = images[ods.index(kj) + 1]
-                                        except Exception:
-                                            image_outfit = Selector(text=product_detail_req.text).xpath(
-                                                '//div[@class="figure-image"]//img').xpath("@src").extract()
-                                            if image_outfit:
-                                                image_outfit = image_outfit[0]
-                                            else:
-                                                image_outfit = ''
-                                        csv_data_save(kj.replace(":", ""), outfit_desc, image_outfit)
-                                else:
-                                    csv_data_save("", "", "")
+                                logger.info("Completed link no. {} from total of {}".format(
+                                    product_list.index(product_link) + 1,
+                                    len(product_list)))
                         except Exception as e:
                             with open("./exception_link.txt", 'a+') as fp:
                                 fp.write(product_link + "\n")
