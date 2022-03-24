@@ -150,7 +150,7 @@ if r.status_code == 200:
                                     '(//div[@class="col-md-6"])[1]//img').xpath('@src').extract()
 
                                 # --------------------------------------------------------------------------------------
-                                celeb_image = title = buy_link = ''
+                                sort_description = get_it_second_hand = celeb_image = title = buy_link = ''
 
                                 # --------------------------------------------------------------------------------------
                                 ids = int(str(random.randint(1, 10000000000000000000000000))[:5])
@@ -165,7 +165,11 @@ if r.status_code == 200:
                                 except Exception:
                                     buy_price = ''
                                 get_it_second_hand = [product_info[product_info.index(ac) + 1] for ac in product_info if "Get it second hand" in ac]
+                                if get_it_second_hand:
+                                    get_it_second_hand = get_it_second_hand[0]
                                 sort_description = [product_info[product_info.index(ac) + 1] for ac in product_info if "Description" in ac]
+                                if sort_description:
+                                    sort_description = sort_description[0]
 
                                 if buy_link_info:
                                     buy_link = buy_link_info[0]
@@ -202,6 +206,11 @@ if r.status_code == 200:
                                                                'Similar Image', 'Similar Store', 'Similar Price',
                                                                'Similar BuyLink'])
                                 new_df.to_csv(csv_path, mode='a', header=False, index=False)
+
+                                print("Link :",product_link,"\n","Actor :",actor[0],"\n","show_series_name :",show_series_name[0],"\n","episode :",episode[0],
+                                      "\n","brand_product :",brand_product[0],"\n","buy_price :",buy_price,"\n",
+                                      "get_it_second_hand :",get_it_second_hand,"\n","description :",sort_description,"\n",
+                                      "buy_link :",buy_link,"\n","title :",title,"\n","celeb_image :",celeb_image)
 
                                 logger.info("Completed link no. {} from total of {}".format(
                                     product_list.index(product_link) + 1,
