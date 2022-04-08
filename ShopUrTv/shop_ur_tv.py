@@ -1,40 +1,6 @@
-# import requests
-# from scrapy import Selector
-# # //div[@class="cols"]//li//a... for link
-# starting_page = 1
-# ending_page = 3350
-# total_products = 14000
-# for p in range(starting_page, ending_page+1):
-#     try:
-#         print("Page no. {}".format(p))
-#         if p != 0:
-#             r = requests.get("https://www.shopyourtv.com/page/{}/".format(p))
-#             if r.status_code == 404:
-#                 print("Page limit is exceed.")
-#                 break
-#             elif r.status_code == 200:
-#                 product_data = Selector(text=r.text).xpath('//a[@rel="bookmark"]').xpath("@href").extract()
-#                 for product_link in product_data:
-#                     try:
-#                         rp = requests.get(product_link)
-#                         if rp.status_code == 200:
-#                             print("get the detail of no .{}".format(product_data.index(product_link) + 1))
-#                             product_info = Selector(text=rp.text).xpath('//ul[@class="details_list"]//text()').extract()
-#                             print(product_info)
-#                             product_Desc = Selector(text=rp.text).xpath(
-#                                 '//div[@class="col-md-12 col-sm-12 col-xs-12 no-padding sm-padding-one-bottom text-center border-right-mid-gray post-details-tags sm-no-border meta-border-right"]//text()').extract()
-#                             print(product_Desc)
-#                     except Exception:
-#                         print("Found issues with current data where product no. is {}".format(product_data.index(product_link) + 1))
-#             else:
-#                 print("Have some issues of timeout or server disconnect for this page no .{}".format(p))
-#     except Exception:
-#         print("Current page have some issues, so if you face some major issues please restart it.")
-
 import argparse
 import json
 import os
-
 import requests
 from scrapy import Selector
 import pandas as pd
@@ -54,23 +20,16 @@ logger = logging.getLogger("shopurtv_logs")
 # basic conf...........
 base_url = "https://www.shopyourtv.com/tv-shows/"
 csv_path = "./Shopurtv.csv"
-heads = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36',
-    "Upgrade-Insecure-Requests": "1", "DNT": "1",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, deflate"}
 
-# # Argument config ....
-# parser = argparse.ArgumentParser()
-# parser.add_argument('--s', type=str, required=True, help="This is for staring point.")
-# parser.add_argument('--e', type=str, required=True, help="This is for ending point.")
+# Argument config ....
+parser = argparse.ArgumentParser()
+parser.add_argument('--s', type=str, required=True, help="This is for staring point.")
+parser.add_argument('--e', type=str, required=True, help="This is for ending point.")
 
-# args = parser.parse_args()
-# starting_point = int(args.s)
-# ending_point = int(args.e)
+args = parser.parse_args()
+starting_point = int(args.s)
+ending_point = int(args.e)
 
-starting_point = 1
-ending_point = 10
 
 # request the url.......
 r = requests.get(base_url)
@@ -150,26 +109,34 @@ if r.status_code == 200:
                                     '(//div[@class="col-md-6"])[1]//img').xpath('@src').extract()
 
                                 # --------------------------------------------------------------------------------------
-                                sort_description = get_it_second_hand = celeb_image = title = buy_link = ''
+                                description = get_it_second_hand = celeb_image = title = buy_link = ''
 
                                 # --------------------------------------------------------------------------------------
                                 ids = int(str(random.randint(1, 10000000000000000000000000))[:5])
-                                actor = [product_info[product_info.index(ac) + 1] for ac in product_info if "Actor" in ac]
-                                show_series_name = [product_info[product_info.index(ac) + 1] for ac in product_info if "Show" in ac]
-                                episode = [product_info[product_info.index(ac) + 1] for ac in product_info if "Episode" in ac]
-                                brand_product = [product_info[product_info.index(ac) + 1] for ac in product_info if "Brand Product" in ac]
+                                actor = [product_info[product_info.index(ac) + 1] for ac in product_info if
+                                         "Actor" in ac]
+                                show_series_name = [product_info[product_info.index(ac) + 1] for ac in product_info if
+                                                    "Show" in ac]
+                                episode = [product_info[product_info.index(ac) + 1] for ac in product_info if
+                                           "Episode" in ac]
+                                brand_product = [product_info[product_info.index(ac) + 1] for ac in product_info if
+                                                 "Brand Product" in ac]
                                 try:
-                                    buy_price = [product_info[product_info.index(ac) + 1:product_info.index("Description:")] for ac in product_info if "Buy" in ac]
+                                    buy_price = [
+                                        product_info[product_info.index(ac) + 1:product_info.index("Description:")] for
+                                        ac in product_info if "Buy" in ac]
                                     if buy_price:
                                         buy_price = buy_price[0][1]
                                 except Exception:
                                     buy_price = ''
-                                get_it_second_hand = [product_info[product_info.index(ac) + 1] for ac in product_info if "Get it second hand" in ac]
+                                get_it_second_hand = [product_info[product_info.index(ac) + 1] for ac in product_info if
+                                                      "Get it second hand" in ac]
                                 if get_it_second_hand:
                                     get_it_second_hand = get_it_second_hand[0]
-                                sort_description = [product_info[product_info.index(ac) + 1] for ac in product_info if "Description" in ac]
-                                if sort_description:
-                                    sort_description = sort_description[0]
+                                description = [product_info[product_info.index(ac) + 1] for ac in product_info if
+                                               "Description" in ac]
+                                if description:
+                                    description = description[0]
 
                                 if buy_link_info:
                                     buy_link = buy_link_info[0]
@@ -180,10 +147,15 @@ if r.status_code == 200:
                                 if img_info:
                                     celeb_image = img_info[0]
 
-                                fields = [[ids, "", product_link]]
+                                fields = [[ids, title, "", product_link, description, brand_product, "", "", "", "",
+                                           show_series_name, ""
+                                              , "", episode, actor, "", celeb_image, "Mainstream", "", "", "",
+                                           buy_price, buy_link, "", "Shopurtv",
+                                           "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+                                           get_it_second_hand]]
 
                                 new_df = pd.DataFrame(fields,
-                                                      columns=['Id', 'Short Description', 'Product_link',
+                                                      columns=['Id', 'Title', 'Short Description', 'Product_link',
                                                                'Description',
                                                                'Product Name',
                                                                'Product Brand', 'Outfit Name', 'Outfit Description',
@@ -194,7 +166,7 @@ if r.status_code == 200:
                                                                'Celebrity Image', 'Celebrity Type', 'Image1',
                                                                'Image2',
                                                                'Media',
-                                                               'Buy',
+                                                               'Buy', 'Buy Link',
                                                                'Extra_description', 'Source', 'Key works',
                                                                'In House',
                                                                'In House Price',
@@ -204,13 +176,8 @@ if r.status_code == 200:
                                                                'Exact Image', 'Exact Store', 'Exact Price',
                                                                'Exact BuyLink',
                                                                'Similar Image', 'Similar Store', 'Similar Price',
-                                                               'Similar BuyLink'])
+                                                               'Similar BuyLink', 'Get It Second Hand'])
                                 new_df.to_csv(csv_path, mode='a', header=False, index=False)
-
-                                print("Link :",product_link,"\n","Actor :",actor[0],"\n","show_series_name :",show_series_name[0],"\n","episode :",episode[0],
-                                      "\n","brand_product :",brand_product[0],"\n","buy_price :",buy_price,"\n",
-                                      "get_it_second_hand :",get_it_second_hand,"\n","description :",sort_description,"\n",
-                                      "buy_link :",buy_link,"\n","title :",title,"\n","celeb_image :",celeb_image)
 
                                 logger.info("Completed link no. {} from total of {}".format(
                                     product_list.index(product_link) + 1,

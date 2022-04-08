@@ -11,4 +11,5 @@
    Command : 
    > python worn_on_tv.py --s 1 --e 10 \
    > s : staring point (select from shows.txt) \
-   > e : ending point (select from shows.txt)
+   > e : ending point (select from shows.txt) \
+   > Note : same with all file.
